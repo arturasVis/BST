@@ -57,12 +57,15 @@ const createBST=function(unsortedArray){
             return
         }
         if(nodeCurrent.value>value){
-            insert(value,nodeCurrent.left,nodeCurrent),true;
+            insert(value,nodeCurrent.left,nodeCurrent,true);
         }else{
             insert(value,nodeCurrent.right,nodeCurrent,false);
         }
     }
     function deleteItem(value,nodeCurrent=root,parentNode=null,isLeft=false){
+        if(nodeCurrent===null){
+            return;
+        }
         if(nodeCurrent.value==value){
             if(nodeCurrent.left===null&&nodeCurrent.right===null){
                 adjustNode(parentNode,nodeCurrent,isLeft,true);
@@ -128,20 +131,181 @@ const createBST=function(unsortedArray){
             
         
     }
+    function find(value,node=root){
+        if(node===null){
+            return null;
+        }
+        if(node.value===value){
+            return node;
+        }
+        if(node.value>value){
+            return find(value,node.left);
+            
+        }else{
+           return find(value,node.right);
+        }
+    }
+    function leverOrder(callback=undefined,node=root){
+        let Q=[];
+        Q.push(node);
+        let returnArray=[];
+        while(Q.length>0){
+            const item=Q.shift();
+            traversallProcess(callback,returnArray,item);
+            if(item.left!=null){
+                Q.push(item.left);
+            }
+            if(item.right!=null){
+                Q.push(item.right);
+            }
+        }
+        return returnArray;
+    }
+    function leverOrderRec(callback=undefined,returnArray=[],Q=[root]){
+        if(Q.length==0){
+            return returnArray;
+        }
+        const item=Q.shift();
+        traversallProcess(callback,returnArray,item);
+        if(item.left!==null)
+            Q.push(item.left);
+        if(item.right!==null)
+            Q.push(item.right);
+        return leverOrderRec(callback,returnArray,Q);
+        
+    }
+    function inOrder(node=root,callback=undefined,returnArray=[]){
+        if(node===null){
+            return returnArray;
+        }
+        inOrder(node.left,callback,returnArray);
+        traversallProcess(callback,returnArray,node);
+        inOrder(node.right,callback,returnArray);
+        return returnArray;
+
+    }
+    function preOrder(node=root,callback=undefined,returnArray=[]){
+        if(node===null){
+            return returnArray;
+        }
+        traversallProcess(callback,returnArray,node);
+        preOrder(node.left,callback,returnArray);
+        preOrder(node.right,callback,returnArray);
+        return returnArray;
+
+    }
+    function postOrder(node=root,callback=undefined,returnArray=[]){
+        if(node===null){
+            return returnArray;
+        }
+        postOrder(node.left,callback,returnArray);
+        postOrder(node.right,callback,returnArray);
+        traversallProcess(callback,returnArray,node);
+        return returnArray;
+
+    }
+    function traversallProcess(callback,returnArray,item){
+        if(callback!==undefined){
+            callback(node);
+        }else{
+            returnArray.push(item.value);
+        }
+    }
+    function height(node=root) {
+        if (node === null) {
+            return -1;
+        } else {
+            let leftHeight = height(node.left);
+            let rightHeight = height(node.right);
+            return Math.max(leftHeight, rightHeight) + 1;
+        }
+    }
+    function depth(node,nodeCurrent=root,count=0){
+        if(node===null){
+            return -1;
+        }
+        if(nodeCurrent===null){
+            return -1;
+        }
+        if(node.value===nodeCurrent.value){
+            return count;
+        }
+        if(node.value>nodeCurrent.value){
+            return depth(node,nodeCurrent.right,count+1);
+        }
+        else{
+            return depth(node,nodeCurrent.left,count+1);
+        }
+    }
+    function isBalanced(node=root){
+        if(node===null)
+            return true;
+
+        const leftHeight=height(node.left);
+        const rightHeight=height(node.right);
+
+        if(Math.abs(leftHeight-rightHeight)>1){
+            return false;
+        }
+        isBalanced(node.left);
+        isBalanced(node.right);
+        return true;
+    }
+    function rebalance(node=root){
+        const treeArr=inOrder(node);
+        const sortedArr=sortAndUnique(treeArr)
+        const newTree=buildTree(sortedArr,0,sortedArr.length-1);
+        root=newTree;
+    }
+    
     return{
         prettyPrint,
         insert,
-        deleteItem
+        deleteItem,
+        find,
+        leverOrder,
+        leverOrderRec,
+        inOrder,
+        postOrder,
+        preOrder,
+        height,
+        depth,
+        isBalanced,
+        rebalance
     }
 }
 
-const testArray=[5,11];
+const testArray=returnRandomArray();
 
 const BST=createBST(testArray);
-BST.prettyPrint();
-//BST.insert(25);
-BST.prettyPrint();
-BST.deleteItem(5);
-BST.prettyPrint();
-BST.insert(5);
-BST.prettyPrint();
+
+console.log(BST.isBalanced());
+printAllOrders(BST);
+
+const size=parseInt(Math.random()*100);
+for(let i=0;i<size;i++){
+    BST.insert(parseInt(Math.random()*1000));
+}
+
+console.log(BST.isBalanced());
+BST.rebalance();
+printAllOrders(BST);
+
+
+
+function returnRandomArray(){
+    const size=parseInt(Math.random()*100);
+    const randomArr=[];
+    for(let i=0;i<size;i++){
+        randomArr.push(parseInt(Math.random()*1000));
+    }
+    return randomArr;
+}
+
+function printAllOrders(tree){
+    console.log("Inorder: "+tree.inOrder());
+    console.log("Post order: "+tree.postOrder());
+    console.log("PreOrder: "+tree.preOrder());
+    console.log("Inorder: "+tree.leverOrderRec());
+
+}
